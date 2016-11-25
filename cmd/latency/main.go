@@ -26,6 +26,7 @@ func main() {
 	switch *system {
 	case "nats-streaming":
 		factory = &requester.NATSStreamingRequesterFactory{
+			URL:         *url,
 			PayloadSize: *size,
 			Subject:     "foo",
 			ClientID:    "benchmark",
