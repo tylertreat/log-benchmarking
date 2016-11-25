@@ -12,7 +12,7 @@ import (
 
 func main() {
 	var (
-		system      = flag.String("s", "", "[kafka, nats-streaming]")
+		system      = flag.String("s", "", "[kafka, nats]")
 		rate        = flag.Uint64("r", 1400, "requests per second")
 		size        = flag.Int("sz", 200, "message size")
 		duration    = flag.Duration("d", 30*time.Second, "benchmark runtime")
@@ -24,7 +24,7 @@ func main() {
 	var factory bench.RequesterFactory
 
 	switch *system {
-	case "nats-streaming":
+	case "nats":
 		factory = &requester.NATSStreamingRequesterFactory{
 			URL:         *url,
 			PayloadSize: *size,
