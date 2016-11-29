@@ -9,10 +9,11 @@ import (
 )
 
 type Benchmark interface {
-	Setup(consumer bool) error
+	Setup(consumer bool, numMsgs uint) error
 	Send() error
 	Recv() <-chan []byte
 	Errors() uint
+	SendDone() <-chan bool
 }
 
 func main() {
@@ -54,7 +55,7 @@ func main() {
 }
 
 func runConsumer(b Benchmark, numMessages uint) error {
-	if err := b.Setup(true); err != nil {
+	if err := b.Setup(true, numMessages); err != nil {
 		return err
 	}
 	fmt.Println("Running consumer...")
@@ -79,7 +80,7 @@ func runConsumer(b Benchmark, numMessages uint) error {
 }
 
 func runProducer(b Benchmark, numMessages uint) error {
-	if err := b.Setup(false); err != nil {
+	if err := b.Setup(false, numMessages); err != nil {
 		return err
 	}
 	fmt.Println("Running producer...")
@@ -95,6 +96,7 @@ func runProducer(b Benchmark, numMessages uint) error {
 		}
 		sent++
 	}
+	<-b.SendDone()
 	dur := time.Since(start)
 
 	fmt.Printf("Sent: %d\n", sent)

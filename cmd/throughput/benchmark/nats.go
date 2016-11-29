@@ -16,6 +16,9 @@ type NATSBenchmark struct {
 	conn        stan.Conn
 	sub         stan.Subscription
 	msg         []byte
+	acked       uint
+	numMsgs     uint
+	sendDone    chan bool
 }
 
 func NewNATSBenchmark(url, subject string, payloadSize uint) *NATSBenchmark {
@@ -24,10 +27,12 @@ func NewNATSBenchmark(url, subject string, payloadSize uint) *NATSBenchmark {
 		url:         url,
 		subject:     subject,
 		recv:        make(chan []byte, 65536),
+		sendDone:    make(chan bool),
 	}
 }
 
-func (n *NATSBenchmark) Setup(consumer bool) error {
+func (n *NATSBenchmark) Setup(consumer bool, numMsgs uint) error {
+	n.numMsgs = numMsgs
 	if consumer {
 		return n.setupConsumer()
 	}
@@ -74,6 +79,10 @@ func (n *NATSBenchmark) Send() error {
 			fmt.Println(err)
 			n.errors++
 		}
+		n.acked++
+		if n.acked == n.numMsgs {
+			n.sendDone <- true
+		}
 	})
 	return err
 }
@@ -84,4 +93,8 @@ func (n *NATSBenchmark) Recv() <-chan []byte {
 
 func (n *NATSBenchmark) Errors() uint {
 	return n.errors
+}
+
+func (n *NATSBenchmark) SendDone() <-chan bool {
+	return n.sendDone
 }

@@ -16,6 +16,9 @@ type KafkaBenchmark struct {
 	partitionConsumer sarama.PartitionConsumer
 	msg               *sarama.ProducerMessage
 	errors            uint
+	acked             uint
+	numMsgs           uint
+	sendDone          chan bool
 }
 
 func NewKafkaBenchmark(urls []string, topic string, payloadSize uint) *KafkaBenchmark {
@@ -24,10 +27,12 @@ func NewKafkaBenchmark(urls []string, topic string, payloadSize uint) *KafkaBenc
 		urls:        urls,
 		topic:       topic,
 		recv:        make(chan []byte, 65536),
+		sendDone:    make(chan bool),
 	}
 }
 
-func (k *KafkaBenchmark) Setup(consumer bool) error {
+func (k *KafkaBenchmark) Setup(consumer bool, numMsgs uint) error {
+	k.numMsgs = numMsgs
 	if consumer {
 		return k.setupConsumer()
 	}
@@ -37,6 +42,8 @@ func (k *KafkaBenchmark) Setup(consumer bool) error {
 
 func (k *KafkaBenchmark) setupProducer() error {
 	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = 1
+	config.Producer.Return.Successes = true
 	producer, err := sarama.NewAsyncProducer(k.urls, config)
 	if err != nil {
 		return err
@@ -51,6 +58,15 @@ func (k *KafkaBenchmark) setupProducer() error {
 		for err := range k.producer.Errors() {
 			fmt.Println(err)
 			k.errors++
+		}
+	}()
+
+	go func() {
+		for _ = range k.producer.Successes() {
+			k.acked++
+			if k.acked == k.numMsgs {
+				k.sendDone <- true
+			}
 		}
 	}()
 
@@ -98,4 +114,8 @@ func (k *KafkaBenchmark) Recv() <-chan []byte {
 
 func (k *KafkaBenchmark) Errors() uint {
 	return k.errors
+}
+
+func (k *KafkaBenchmark) SendDone() <-chan bool {
+	return k.sendDone
 }
