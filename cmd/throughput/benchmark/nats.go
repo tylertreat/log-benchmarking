@@ -60,7 +60,7 @@ func (n *NATSBenchmark) setupConsumer() error {
 }
 
 func (n *NATSBenchmark) setupProducer() error {
-	conn, err := stan.Connect("test-cluster", "producer", stan.NatsURL(n.url))
+	conn, err := stan.Connect("test-cluster", "producer", stan.NatsURL(n.url), stan.MaxPubAcksInflight(1024))
 	if err != nil {
 		return err
 	}
