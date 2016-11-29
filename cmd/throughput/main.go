@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/tylertreat/log-benchmarking/cmd/throughput/benchmark"
@@ -34,6 +35,9 @@ func main() {
 		b = benchmark.NewKafkaBenchmark([]string{*url}, topic, *size)
 	case "nats":
 		b = benchmark.NewNATSBenchmark(*url, topic, *size)
+	default:
+		fmt.Printf("Unknown system '%s'\n", *system)
+		os.Exit(1)
 	}
 
 	var err error

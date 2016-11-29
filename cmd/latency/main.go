@@ -34,10 +34,9 @@ func main() {
 	case "kafka":
 		factory = &requester.KafkaRequesterFactory{
 			URLs:        []string{*url},
-			PayloadSize: 200,
-			Topic:       "foo",
+			PayloadSize: *size,
+			Topic:       "benchmark",
 		}
-
 	default:
 		fmt.Printf("Unknown system '%s'\n", *system)
 		os.Exit(1)
