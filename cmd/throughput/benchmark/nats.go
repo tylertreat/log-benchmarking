@@ -2,6 +2,7 @@ package benchmark
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/nats-io/go-nats"
 	"github.com/nats-io/go-nats-streaming"
@@ -70,6 +71,9 @@ func (n *NATSBenchmark) setupProducer() error {
 		n.errors++
 	})
 	n.msg = make([]byte, n.payloadSize)
+	for i := 0; i < int(n.payloadSize); i++ {
+		n.msg[i] = 'A' + uint8(rand.Intn(26))
+	}
 	return nil
 }
 

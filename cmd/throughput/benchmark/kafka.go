@@ -2,6 +2,7 @@ package benchmark
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/Shopify/sarama"
 )
@@ -49,9 +50,13 @@ func (k *KafkaBenchmark) setupProducer() error {
 		return err
 	}
 	k.producer = producer
+	msg := make([]byte, k.payloadSize)
+	for i := 0; i < int(k.payloadSize); i++ {
+		msg[i] = 'A' + uint8(rand.Intn(26))
+	}
 	k.msg = &sarama.ProducerMessage{
 		Topic: k.topic,
-		Value: sarama.ByteEncoder(make([]byte, k.payloadSize)),
+		Value: sarama.ByteEncoder(msg),
 	}
 
 	go func() {
